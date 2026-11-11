@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; manifest-src 'self'; worker-src 'self'">
+<title>سند: الموظف الجامع</title>
+<link rel="stylesheet" href="css/app.css">
+<meta name="theme-color" content="#0F5F66">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="سند">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script src="js/theme.js"></script>
+</head>
+<body>
+<svg class="sprite" width="0" height="0" aria-hidden="true">
+  <symbol id="i-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M4 18l5-5 4 4 3-3 4 4"/></symbol>
+</svg>
+<main class="collector">
+  <section id="setup" class="card stack" hidden>
+    <h1>إعداد الموظف الجامع</h1>
+    <p class="muted">هذا الوضع يعمل بلا إنترنت وبلا خادم. تُحفظ الطلبات مشفَّرة على هذا الهاتف، ثم تُرحَّل إلى الحاسوب المركزي في الجمعية. أدخل رمزك الذي أعطاك إياه المدير.</p>
+    <div class="field" id="setup-f"><label for="emp">رمز الموظف</label><input id="emp" dir="ltr" inputmode="text" autocomplete="off" placeholder="EMP-002" maxlength="12"><small></small></div>
+    <div class="actions"><button type="button" class="btn" id="setup-save">حفظ والبدء</button></div>
+  </section>
+
+  <div id="app" hidden>
+  <div class="top"><div class="grow"><h1>طلب جديد</h1>
+    <p>يعمل دون اتصال: يُحفظ الطلب مشفَّراً على هذا الهاتف ثم يُرحَّل إلى الحاسوب المركزي</p></div></div>
+  <div id="ob-tools" class="ob-tools"></div>
+  <div class="opbar"><span>الموظف الجامع:</span><b class="code" id="who"></b><button type="button" class="btn sec sm" id="change-emp">تغيير الرمز</button></div>
+  <form id="rform" novalidate class="stack" data-offline="request" autocomplete="off">
+    <input type="hidden" name="client_uid" id="client_uid" value="">
+    <section class="card"><h2>بيانات اليتيم</h2><div class="fgrid">
+      <div class="field"><label for="child_name">اسم اليتيم رباعي<sup>*</sup></label><input id="child_name" name="child_name" maxlength="160" placeholder="الاسم + اسم الأب + اسم الجد + العائلة"><small>أربعة أسماء على الأقل</small></div>
+      <div class="field"><label for="child_id">رقم هوية اليتيم<sup>*</sup></label><input id="child_id" name="child_id" inputmode="numeric" maxlength="9" dir="ltr" placeholder="9 أرقام"><small>تسع خانات</small></div>
+    </div></section>
+    <section class="card"><h2>بيانات الشهيد</h2><div class="fgrid">
+      <div class="field"><label for="martyr_name">اسم الشهيد<sup>*</sup></label><input id="martyr_name" name="martyr_name" maxlength="160"><small></small></div>
+      <div class="field"><label for="martyr_date">تاريخ الاستشهاد<sup>*</sup></label><input id="martyr_date" name="martyr_date" type="date"><small></small></div>
+    </div></section>
+    <section class="card"><h2>الوصي والحساب والتواصل</h2><div class="fgrid">
+      <div class="field"><label for="guardian_name">اسم الوصي<sup>*</sup></label><input id="guardian_name" name="guardian_name" maxlength="160"><small></small></div>
+      <div class="field"><label for="account_type">نوع الحساب<sup>*</sup></label><select id="account_type" name="account_type"><option value="">— اختر بنك أو محفظة —</option><option value="bank">حساب بنكي</option><option value="wallet">محفظة إلكترونية</option></select><small></small></div>
+      <div class="field"><label for="account">رقم الحساب أو المحفظة<sup>*</sup></label><input id="account" name="account" dir="ltr" maxlength="40" placeholder="PS00 XXXX …"><small>يُحفظ مشفَّراً</small></div>
+      <div class="field"><label for="phone">جوال</label><input id="phone" name="phone" inputmode="tel" maxlength="10" dir="ltr" placeholder="059XXXXXXX"><small>يلزم جوال أو واتساب على الأقل</small></div>
+      <div class="field"><label for="whatsapp">واتساب</label><input id="whatsapp" name="whatsapp" inputmode="tel" maxlength="10" dir="ltr" placeholder="059XXXXXXX"><small></small></div>
+    </div><label class="check"><input type="checkbox" id="same-num"> رقم الواتساب هو نفس رقم الجوال</label></section>
+    <section class="card"><h2>السكن</h2><div class="fgrid">
+      <div class="field"><label for="old_residence">مكان السكن القديم<sup>*</sup></label><select id="old_residence" name="old_residence"></select><small></small></div>
+      <div class="field"><label for="current_residence">مكان السكن الحالي<sup>*</sup></label><select id="current_residence" name="current_residence"></select><small></small></div>
+      <div class="field"><label for="housing_type">طبيعة السكن<sup>*</sup></label><select id="housing_type" name="housing_type"></select><small></small></div>
+    </div></section>
+    <section class="card"><h2>المرفقات المطلوبة</h2>
+      <p class="muted">خمسة مستندات: صور JPG أو PNG أو WebP. ويمكن استكمال الناقص منها لاحقاً في الحاسوب المركزي</p>
+      <div class="docs">
+        <label class="slot" data-kind="face"><svg><use href="#i-img"/></svg><b>صورة شخصية للوجه</b><span class="req">مطلوب</span><small>اضغط لالتقاط أو اختيار صورة</small><input type="file" name="doc_face" accept="image/jpeg,image/png,image/webp" hidden></label>
+        <label class="slot" data-kind="death"><svg><use href="#i-img"/></svg><b>صورة شهادة وفاة الأب</b><span class="req">مطلوب</span><small>اضغط لالتقاط أو اختيار صورة</small><input type="file" name="doc_death" accept="image/jpeg,image/png,image/webp" hidden></label>
+        <label class="slot" data-kind="birth"><svg><use href="#i-img"/></svg><b>صورة شهادة ميلاد اليتيم</b><span class="req">مطلوب</span><small>اضغط لالتقاط أو اختيار صورة</small><input type="file" name="doc_birth" accept="image/jpeg,image/png,image/webp" hidden></label>
+        <label class="slot" data-kind="wasi"><svg><use href="#i-img"/></svg><b>صورة حجة وصاية الوصي</b><span class="req">مطلوب</span><small>اضغط لالتقاط أو اختيار صورة</small><input type="file" name="doc_wasi" accept="image/jpeg,image/png,image/webp" hidden></label>
+        <label class="slot" data-kind="guardian_id"><svg><use href="#i-img"/></svg><b>صورة هوية الوصي</b><span class="req">مطلوب</span><small>اضغط لالتقاط أو اختيار صورة</small><input type="file" name="doc_guardian_id" accept="image/jpeg,image/png,image/webp" hidden></label>
+      </div></section>
+    <section class="card"><div class="field wide"><label for="note">ملاحظات</label><input id="note" name="note" maxlength="255"><small></small></div></section>
+    <div class="actions"><button class="btn" type="submit" id="rsubmit">حفظ الطلب على الجهاز</button></div>
+  </form>
+  </div>
+  <small class="muted ver" id="ver" dir="ltr"></small>
+</main>
+<script src="js/version.js"></script>
+<script src="js/collector.js"></script>
+<script src="js/app.js"></script>
+<script src="js/offline.js"></script>
+</body>
+</html>
