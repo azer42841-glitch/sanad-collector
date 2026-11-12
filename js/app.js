@@ -56,6 +56,9 @@
     f.addEventListener("submit", function (e) { if (!window.confirm(f.dataset.confirm)) e.preventDefault(); });
   });
 
+  /* من أيقونة «اعتماد» في قائمة الطلبات: نفتح قرار الكفيل للحالة المطلوبة في الكشف مباشرة */
+  if (/^#r\d+$/.test(location.hash)) { var dd = document.getElementById("d" + location.hash.slice(2)); if (dd) dd.open = true; }
+
   var pb = $("#print-btn");
   if (pb) pb.addEventListener("click", function () { window.print(); });
 

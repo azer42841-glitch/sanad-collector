@@ -331,3 +331,9 @@ tr.pending td{background:color-mix(in srgb,var(--danger) 10%,transparent)}
 .narrow{max-width:520px}
 .collector{max-width:780px;margin:0 auto;padding:16px calc(16px + env(safe-area-inset-right,0px)) 40px calc(16px + env(safe-area-inset-left,0px))}
 .ver{display:block;text-align:center;opacity:.7;font-size:11px;margin-top:6px}
+.btn.ok{background:var(--ok);color:#fff}
+.btn.icon{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.chg{width:100%}.chg td{vertical-align:top}.chg .old{color:var(--danger);text-decoration:line-through}.chg .new{color:var(--ok);font-weight:600}
+.perm td:not(:first-child),.perm th:not(:first-child){text-align:center}
+.flash.warnbox{background:var(--warn-soft);color:var(--warn)}
+.actions-inline{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
