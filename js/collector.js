@@ -7,6 +7,23 @@
   window.SANAD_SW_URL = window.SanadAndroid ? null : "sw.js";
   window.SANAD_SW_SCOPE = "./";
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}   // يطلب حماية الطلبات المحفوظة من تنظيف المتصفح
+  /* آيفون: روابط الواتساب وغيره تُفتح في متصفح داخلي لا يسمح بإضافة التطبيق للشاشة الرئيسية، فننبّه ونوفّر نسخ الرابط للصقه في Safari. */
+  (function () {
+    var ua = navigator.userAgent || "";
+    var ios = /iPhone|iPad|iPod/.test(ua);
+    var inApp = ios && (!/Safari\//.test(ua) || /WhatsApp|FBAN|FBAV|Instagram|Line|Telegram/.test(ua));
+    if (!inApp || window.navigator.standalone) return;
+    var main = document.querySelector("main"), box = document.createElement("div");
+    box.className = "flash error"; box.setAttribute("role", "alert");
+    box.innerHTML = "<b>افتح الرابط في Safari.</b> هذا المتصفح الداخلي (واتساب) لا يسمح بتثبيت التطبيق. انسخ الرابط ثم الصقه في Safari.<br>";
+    var b = document.createElement("button"); b.type = "button"; b.className = "btn sm"; b.textContent = "نسخ الرابط";
+    b.onclick = function () {
+      var u = location.href.split("#")[0], done = function () { b.textContent = "تم النسخ، افتح Safari والصقه"; };
+      try { navigator.clipboard.writeText(u).then(done, function () { prompt("انسخ الرابط:", u); }); } catch (e) { prompt("انسخ الرابط:", u); }
+    };
+    box.appendChild(b);
+    if (main) main.insertBefore(box, main.firstChild);
+  })();
   var $ = function (s) { return document.querySelector(s); };
   var AREAS = ["رفح", "خانيونس", "دير البلح", "المواصي", "النصيرات", "غزة", "جباليا", "بيت لاهيا", "بيت حانون"];
   var HOUSING = ["منزل", "مخيم", "خيمة مستقلة"];

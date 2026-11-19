@@ -287,7 +287,8 @@
     if (cur < 3) return show(cur + 1);
     var lack = $$(".slot", form).filter(function (s) { return !attached(s); });
     $$(".slot", form).forEach(function (s) { s.classList.toggle("miss", lack.indexOf(s) >= 0); });
-    if (lack.length) { alert_lack(lack.length); return; }
+    var wv = $("#waive_docs") || $("#waived_by_request");        /* إقرار المدير: يسمح بالمتابعة رغم نقص المستندات */
+    if (lack.length && !(wv && (wv.type === "hidden" || wv.checked))) { alert_lack(lack.length); return; }
     $("#next").disabled = true;
     form.submit();
   });
