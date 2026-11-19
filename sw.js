@@ -1,5 +1,5 @@
 // يُولَّد تلقائياً بواسطة tools/build_collector.py، لا تعدّله يدوياً.
-const CACHE = 'sanad-collector-1.4.0-285b30ac';
+const CACHE = 'sanad-collector-1.5.0-1cde6dda';
 const FILES = [
   './',
   'css/app.css',
@@ -10,9 +10,11 @@ const FILES = [
   'index.html',
   'js/app.js',
   'js/collector.js',
+  'js/lookup.js',
   'js/offline.js',
   'js/theme.js',
   'js/version.js',
+  'lookup.html',
   'manifest.webmanifest'
 ];
 self.addEventListener('install', e => {

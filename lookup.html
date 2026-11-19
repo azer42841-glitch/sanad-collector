@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; manifest-src 'self'; worker-src 'self'">
+<title>سند: البحث في الكفالات</title>
+<link rel="stylesheet" href="css/app.css">
+<meta name="theme-color" content="#0F5F66">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="سند">
+<script src="js/theme.js"></script>
+</head>
+<body>
+<main class="collector">
+  <div class="top"><div class="grow"><h1>البحث في الكفالات</h1><p>يعمل دون إنترنت على ملف مشفّر صدّره المدير من سند</p></div><a class="btn sec sm" href="./">← الرئيسية</a></div>
+  <div id="msg" class="flash" role="alert" hidden></div>
+
+  <section id="s-empty" class="card stack" hidden>
+    <h2>لا توجد بيانات على هذا الجوال</h2>
+    <p class="muted">في سند على الحاسوب: «نسخة البحث للجوال» ← تصدير. ثم أرسل الملف لهذا الجوال (واتساب ويب أو بريد أو AirDrop) واخترْه هنا.</p>
+    <label class="btn" for="pick">اختيار الملف (.sanadlk)</label><input id="pick" type="file" hidden>
+  </section>
+
+  <section id="s-lock" class="card stack" hidden>
+    <h2>البيانات محفوظة ومقفلة</h2>
+    <p class="muted" id="info"></p>
+    <div class="field"><label for="pw">كلمة مرور الملف</label><input id="pw" type="password" autocomplete="off" autocapitalize="off" dir="ltr"><small id="pw-h"></small></div>
+    <div class="actions"><button type="button" class="btn" id="unlock">فتح</button>
+      <label class="btn sec" for="pick2">استبدال بملف أحدث</label><input id="pick2" type="file" hidden>
+      <button type="button" class="btn sec" id="wipe">حذف البيانات من الجوال</button></div>
+  </section>
+
+  <section id="s-search" class="stack" hidden>
+    <div class="card stack">
+      <div class="field"><label for="q">ابحث عن اسم (يتيم، شهيد، وصي، كفيل، أو رقم ملف)</label><input id="q" type="search" autocomplete="off" enterkeyhint="search"><small id="count"></small></div>
+      <p class="muted" id="stamp"></p>
+      <div class="actions"><button type="button" class="btn sec" id="lock">قفل</button></div>
+    </div>
+    <div id="results" class="stack"></div>
+  </section>
+</main>
+<script src="js/lookup.js"></script>
+</body>
+</html>
