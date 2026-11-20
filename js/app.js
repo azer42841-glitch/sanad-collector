@@ -56,6 +56,22 @@
     f.addEventListener("submit", function (e) { if (!window.confirm(f.dataset.confirm)) e.preventDefault(); });
   });
 
+  /* أزرار النسخ (data-copy): تعمل على https وعلى http داخل الشبكة المحلية (حيث لا يتوفر clipboard) */
+  $$("[data-copy]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var txt = b.getAttribute("data-copy"), done = function () {
+        var old = b.innerHTML; b.textContent = b.getAttribute("data-done") || "تم النسخ";
+        setTimeout(function () { b.innerHTML = old; }, 1800);
+      }, fallback = function () {
+        var ta = document.createElement("textarea"); ta.value = txt; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        var ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+        ta.remove(); if (ok) done(); else window.prompt("انسخ النص:", txt);
+      };
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(done, fallback); else fallback();
+    });
+  });
+
   /* من أيقونة «اعتماد» في قائمة الطلبات: نفتح قرار الكفيل للحالة المطلوبة في الكشف مباشرة */
   if (/^#r\d+$/.test(location.hash)) { var dd = document.getElementById("d" + location.hash.slice(2)); if (dd) dd.open = true; }
 

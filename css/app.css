@@ -343,3 +343,4 @@ tr.pending td{background:color-mix(in srgb,var(--danger) 10%,transparent)}
 .big-no{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:34px;font-weight:700;letter-spacing:.06em;text-align:center;direction:ltr;background:var(--surface2);border-radius:14px;padding:16px;user-select:all}
 .res .tag{margin-inline-start:2px}
 .tips ul{margin:.3em 0 0;padding-inline-start:1.3em}.tips li{margin:.3em 0}
+.linkbox{padding:10px 12px;background:var(--brand-soft);border-radius:10px;word-break:break-all}
