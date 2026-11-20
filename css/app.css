@@ -345,3 +345,4 @@ tr.pending td{background:color-mix(in srgb,var(--danger) 10%,transparent)}
 .tips ul{margin:.3em 0 0;padding-inline-start:1.3em}.tips li{margin:.3em 0}
 .linkbox{padding:10px 12px;background:var(--brand-soft);border-radius:10px;word-break:break-all}
 .plogo{display:flex;justify-content:center;margin:4px 0 12px}.plogo img{max-width:min(240px,62vw);height:auto;border-radius:18px;background:#fff;padding:10px;border:1px solid var(--line, #d9ded9)}
+.pshell,.pshell h1,.pshell h2,.pshell h3,.pshell button,.pshell input,.pshell select{font-family:"Simplified Arabic",var(--body)}.pshell{font-size:17px}
