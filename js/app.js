@@ -319,3 +319,14 @@
   var firstBad = $(".bad, .slot.miss", form);
   if (firstBad) { var st = firstBad.closest(".step"); if (st) show(steps.indexOf(st)); }
 })();
+
+/* تفعيل اتصال الجوالات من داخل سند: ننتظر موافقة المدير وإعادة تشغيل الخادم ثم تتحدّث الصفحة وحدها */
+(function () {
+  var w = document.getElementById("lan-wait");
+  if (!w) return;
+  var t = setInterval(function () {
+    fetch(w.dataset.url, { credentials: "same-origin", cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      if (j && (j.on || j.result === "denied")) { clearInterval(t); location.href = location.pathname; }
+    }).catch(function () {});     /* الخادم يعيد التشغيل: نحاول ثانية */
+  }, 3000);
+})();
