@@ -21,8 +21,11 @@
 
   <section id="s-empty" class="card stack" hidden>
     <h2>لا توجد بيانات على هذا الجوال</h2>
-    <p class="muted">يرسل لك المدير <b>ملف بيانات خاصاً بجهازك</b> (واتساب أو بريد أو AirDrop): يُنزَّل من «أجهزة الموظفين» في سند على الحاسوب. اختر الملف هنا، ثم افتحه <b>برمز حماية الجهاز</b>. (وملف المدير الشخصي يُفتح بكلمة مرور ملفه.)</p>
-    <label class="btn" for="pick">اختيار الملف (.sanadlk)</label><input id="pick" type="file" hidden>
+    <p class="muted">وأنت على <b>شبكة الجمعية</b>: اكتب رمز حماية جهازك واضغط <b>«تحديث البيانات من حاسوب الجمعية»</b>، فتنزل أحدث البيانات وتفتح للبحث تلقائياً. (وبدون شبكة الجمعية: يرسل لك المدير ملفاً تختاره أدناه.)</p>
+    <div id="sync-box0" class="stack" hidden>
+      <div class="field"><label for="pin0">رمز حماية الجهاز</label><input id="pin0" type="password" inputmode="numeric" autocomplete="off" dir="ltr"><small>وأنت على شبكة الجمعية (الواي فاي).</small></div>
+      <button type="button" class="btn" id="sync0">تحديث البيانات من حاسوب الجمعية</button></div>
+    <label class="btn sec" for="pick">أو اختيار ملف (.sanadlk)</label><input id="pick" type="file" hidden>
   </section>
 
   <section id="s-lock" class="card stack" hidden>
@@ -31,6 +34,7 @@
     <div class="field"><label for="pw">كلمة مرور الملف</label><input id="pw" type="password" autocomplete="off" autocapitalize="off" dir="ltr"><small id="pw-h">ملف خاص بجهازك؟ اكتب هنا <b>رمز حماية الجهاز</b> (نفس رمز التطبيق) واضغط «فتح برمز حماية الجهاز».</small></div>
     <div class="actions"><button type="button" class="btn" id="unlock">فتح بكلمة مرور الملف</button>
       <button type="button" class="btn" id="unlock-dev" hidden>فتح برمز حماية الجهاز</button>
+      <span id="sync-box" hidden><button type="button" class="btn" id="sync">تحديث من حاسوب الجمعية</button></span>
       <label class="btn sec" for="pick2">استبدال بملف أحدث</label><input id="pick2" type="file" hidden>
       <button type="button" class="btn sec" id="wipe">حذف البيانات من الجوال</button></div>
   </section>

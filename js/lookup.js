@@ -27,6 +27,8 @@
     var base = await c.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveKey"]);
     var key = await c.subtle.deriveKey({ name: "PBKDF2", salt: unb64(d.salt), iterations: d.iter, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
     var pt = await c.subtle.decrypt({ name: "AES-GCM", iv: unb64(d.iv), additionalData: new TextEncoder().encode(header(d)) }, key, unb64(d.ct));
+    var u8 = new Uint8Array(pt);
+    if (u8[0] === 0x1f && u8[1] === 0x8b) pt = await new Response(new Blob([pt]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();     // ملف التحديث المباشر مضغوط
     var rows = JSON.parse(new TextDecoder().decode(pt)).rows;
     rows.forEach(function (r) { r._t = norm([r.n, r.f, r.m, r.g, r.a].concat((r.k || []).map(function (k) { return k[0]; })).join(" ")); });
     return rows;
@@ -117,6 +119,41 @@
     return new TextDecoder().decode(await c.subtle.decrypt({ name: "AES-GCM", iv: dev.iv }, key, dev.ct));
   }
   async function hasDevice() { try { var db = await idb(), d = await meta(db, "device"); db.close(); return !!d; } catch (e) { return false; } }
+  /* تحديث البيانات من حاسوب الجمعية بنقرة: نوقّع طلباً قصير الأجل بسرّ الجهاز ونفتح صفحة الحاسوب، فيعيدنا ومعنا الملف */
+  async function hmacHex(secret, msg) {
+    var c = root.crypto || globalThis.crypto, k = await c.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    return Array.prototype.map.call(new Uint8Array(await c.subtle.sign("HMAC", k, new TextEncoder().encode(msg))), function (b) { return ("0" + b.toString(16)).slice(-2); }).join("");
+  }
+  async function startSync(pinEl, btn) {
+    var pin = pinEl.value; if (!pin) return note("اكتب رمز حماية الجهاز أولاً.", "error");
+    var server = ""; try { server = localStorage.getItem("sanad-collector-server") || ""; } catch (e) {}
+    if (!server) return note("عنوان حاسوب الجمعية غير محفوظ. أعد تفعيل الجهاز.", "error");
+    btn.disabled = true; note("جارٍ التحقق من الرمز…");
+    try {
+      var secret = await deviceSecret(pin), db = await idb(), dev = await meta(db, "device"); db.close();
+      var ts = Math.floor(Date.now() / 1000), mac = await hmacHex(secret, "sync|" + dev.d + "|" + ts);
+      try { sessionStorage.setItem("sanad-sync-secret", JSON.stringify({ s: secret, t: Date.now() })); } catch (e) {}        /* لحظات فقط: لنفتح الملف بعد العودة دون إعادة كتابة الرمز */
+      location.href = server + "/lookup/sync?d=" + dev.d + "&ts=" + ts + "&mac=" + mac + "&r=" + encodeURIComponent(location.origin + location.pathname);
+    } catch (e) {
+      btn.disabled = false; note(e && e.message === "nodevice" ? "هذا الجوال غير مفعَّل." : "رمز حماية الجهاز خاطئ.", "error");
+    }
+  }
+  function takeSyncSecret() {
+    try { var o = JSON.parse(sessionStorage.getItem("sanad-sync-secret") || "null"); sessionStorage.removeItem("sanad-sync-secret"); return o && Date.now() - o.t < 5 * 60 * 1000 ? o.s : null; } catch (e) { return null; }
+  }
+  async function afterReturn() {
+    if (!/^#lookup=/.test(location.hash)) return;
+    var raw = location.hash.slice(8);
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+    try {
+      var s = raw.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "=";
+      var text = decodeURIComponent(escape(atob(s))); peek(text);
+      if (store(text) === null) return note("تعذّر حفظ البيانات على الجوال.", "error");
+      var secret = takeSyncSecret();
+      if (secret) { rows = await open(text, secret); note("تم تحديث البيانات من حاسوب الجمعية.", "ok"); view("search"); draw(); idle(); $("#q").focus(); return; }
+      note("وصلت البيانات الجديدة. افتحها برمز حماية الجهاز.", "ok"); refresh();
+    } catch (e) { note("تعذّر قراءة البيانات القادمة من الحاسوب.", "error"); }
+  }
   async function unlockDevice() {
     if (Date.now() < blockedUntil) return note("محاولات كثيرة. انتظر نصف دقيقة.", "error");
     var pin = $("#pw").value; if (!pin) return;
@@ -145,7 +182,10 @@
   $("#pick").addEventListener("change", pick); $("#pick2").addEventListener("change", pick);
   $("#unlock").addEventListener("click", unlock);
   $("#unlock-dev").addEventListener("click", unlockDevice);
-  hasDevice().then(function (ok) { $("#unlock-dev").hidden = !ok; });
+  hasDevice().then(function (ok) { $("#unlock-dev").hidden = !ok; $("#sync-box").hidden = !ok; $("#sync-box0").hidden = !ok; });
+  $("#sync").addEventListener("click", function () { startSync($("#pw"), $("#sync")); });
+  $("#sync0").addEventListener("click", function () { startSync($("#pin0"), $("#sync0")); });
+  afterReturn();
   $("#pw").addEventListener("keydown", function (e) { if (e.key === "Enter") unlock(); });
   $("#q").addEventListener("input", function () { draw(); idle(); });
   $("#lock").addEventListener("click", function () { lock("قُفل البحث."); });

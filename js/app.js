@@ -330,3 +330,9 @@
     }).catch(function () {});     /* الخادم يعيد التشغيل: نحاول ثانية */
   }, 3000);
 })();
+
+/* صفحة تحديث الجوال: العودة التلقائية إلى التطبيق */
+(function () {
+  var a = document.querySelector("a[data-autogo]");
+  if (a && a.href) setTimeout(function () { location.replace(a.href); }, 400);
+})();
