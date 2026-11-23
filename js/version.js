@@ -1,1 +1,1 @@
-window.SANAD_VERSION = "1.10.0";
+window.SANAD_VERSION = "1.11.0";
