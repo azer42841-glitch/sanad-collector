@@ -296,6 +296,24 @@
       (pending ? ' <button type="button" class="btn sm" id="ob-export">ترحيل ' + pending + ' طلب (بلوتوث/مشاركة)</button>' : "");
   }
 
+  /* ---------- مدة الاحتفاظ: ما مضى على حفظه 6 أشهر يُحذف تلقائياً من الجوال (يحتاج الموظف أن يرحّل طلباته بانتظام) ---------- */
+  var RETAIN_DAYS = 180, WARN_DAYS = 30;
+  function ageDays(it) { var t = Date.parse(it.created || ""); return isNaN(t) ? 0 : (Date.now() - t) / 86400000; }
+  function purgeOld() {
+    return idbAll(Q).then(function (all) {
+      var old = all.filter(function (i) { return ageDays(i) > RETAIN_DAYS; });
+      if (!old.length) return 0;
+      return Promise.all(old.map(function (i) { return idbDel(Q, i.id); })).then(function () { return old.length; });
+    });
+  }
+  function purgeAndRender() {
+    return purgeOld().then(function (n) { if (n) toast("حُذف " + n + " طلب مضى على حفظه أكثر من 6 أشهر"); return render(); });
+  }
+  function retentionNote(items) {
+    var soon = items.filter(function (i) { return ageDays(i) > RETAIN_DAYS - WARN_DAYS; }).length;
+    return soon ? ' <b class="redtxt">⚠ ' + soon + ' طلب محفوظ منذ أكثر من 5 أشهر وسيُحذف تلقائياً عند بلوغ 6 أشهر. رحِّله الآن.</b>' : "";
+  }
+
   /* ---------- شريط الحالة ---------- */
   var bar = null;
   function ensureBar() {
@@ -313,7 +331,7 @@
       if (!offline && !items.length) { b.hidden = true; return; }
       if (COLLECTOR) {
         b.hidden = false; b.className = "flash";
-        b.innerHTML = '<b>' + items.length + ' طلب محفوظ مشفَّراً على هذا الجهاز</b> <span class="muted">رحِّلها إلى الحاسوب المركزي بالزر أعلاه عبر بلوتوث أو كابل أو فلاش.</span> ' +
+        b.innerHTML = '<b>' + items.length + ' طلب محفوظ مشفَّراً على هذا الجهاز</b>' + retentionNote(items) + ' <span class="muted">رحِّلها إلى الحاسوب المركزي بالزر أعلاه عبر بلوتوث أو كابل أو فلاش.</span> ' +
           (items.some(function (i) { return i.exportedAt; }) ? '<button type="button" class="btn sec sm" id="ob-purge">حذف المُرحَّلة بعد تأكيد المستلِم</button>' : "");
         return;
       }
@@ -321,7 +339,7 @@
       var html = "";
       if (offline) html += '<b>⚠ أنت غير متصل بالإنترنت.</b> يمكنك تسجيل «طلب جديد» وسيُحفظ مشفَّراً على هذا الجهاز ويُرسل عند عودة الاتصال. ';
       if (items.length) {
-        html += '<b>' + items.length + ' طلب محفوظ على الجهاز بانتظار المزامنة</b> ';
+        html += '<b>' + items.length + ' طلب محفوظ على الجهاز بانتظار المزامنة</b>' + retentionNote(items) + ' ';
         html += '<button type="button" class="btn sm" id="ob-sync"' + (offline ? " disabled" : "") + '>مزامنة الآن</button> ';
         if (items.some(function (i) { return i.exportedAt; })) html += '<button type="button" class="btn sec sm" id="ob-purge">حذف المُرحَّلة بعد تأكيد المستلِم</button> ';
         items.forEach(function (it, i) {
@@ -471,7 +489,7 @@
     lockBusy = true; de.classList.add("locked");
     ensureKey({ lock: true }).then(function (ok) {
       lockBusy = false;
-      if (ok) { de.classList.remove("locked"); armIdle(); } else unlockFlow();
+      if (ok) { de.classList.remove("locked"); armIdle(); purgeAndRender(); } else unlockFlow();
     });
   }
   function lockNow() {
@@ -492,7 +510,7 @@
   }
 
   bindForm();
-  render();
+  purgeAndRender();
   /* تهيئة العمل دون اتصال: تحميل صفحة «طلب جديد» مرة ليحتفظ بها المتصفح، فتُفتح بلا إنترنت */
   if (!COLLECTOR && navigator.onLine && "serviceWorker" in navigator && !$("#rform")) {
     try { if (!sessionStorage.getItem("sanad-warm")) { fetch("/requests/new", { credentials: "same-origin" }).catch(function () {}); sessionStorage.setItem("sanad-warm", "1"); } } catch (x) {}
