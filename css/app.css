@@ -323,6 +323,8 @@ tr.pending td{background:color-mix(in srgb,var(--danger) 10%,transparent)}
 .ob-item{flex-basis:100%;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px}
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:grid;place-items:center;z-index:100;padding:16px}
 .modal{width:min(420px,100%);display:flex;flex-direction:column;gap:12px}
+.modal-ov.lockov{background:var(--bg);z-index:1000}
+html.locked main.collector{visibility:hidden}
 .lerr{background:color-mix(in srgb,var(--danger) 14%,var(--surface));color:var(--danger);border-radius:12px;padding:10px 14px;font-weight:700;font-size:14px}
 .lerr[hidden]{display:none}
 .pwrow{position:relative;display:flex}

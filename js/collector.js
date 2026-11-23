@@ -3,6 +3,8 @@
 (function () {
   "use strict";
   window.SANAD_COLLECTOR = true;
+  /* قفل التطبيق: بمجرد وجود رمز موظف نُخفي الصفحة حتى يُدخَل رمز حماية الجهاز (offline.js) */
+  try { if (localStorage.getItem("sanad-collector-code")) document.documentElement.classList.add("locked"); } catch (e) {}
   /* خارج تطبيق أندرويد (آيفون/متصفح): نسجّل service worker ليعمل بلا إنترنت بعد أول فتح. داخل تطبيق أندرويد الملفات من assets فلا حاجة له. */
   window.SANAD_SW_URL = window.SanadAndroid ? null : "sw.js";
   window.SANAD_SW_SCOPE = "./";
@@ -45,7 +47,8 @@
   function show() {
     var code = get();
     $("#setup").hidden = !!code; $("#app").hidden = !code;
-    if (code) { meta(code); $("#who").textContent = code; }
+    if (code) { meta(code); $("#who").textContent = code; document.documentElement.classList.add("locked"); document.dispatchEvent(new Event("sanad-lock")); }
+    else document.documentElement.classList.remove("locked");
   }
   $("#setup-save").addEventListener("click", function () {
     var v = $("#emp").value.trim().toUpperCase(), f = $("#setup-f");
@@ -56,5 +59,6 @@
     if (window.confirm("تغيير الرمز يؤثر على الطلبات الجديدة فقط. المتابعة؟")) { put(""); $("#emp").value = ""; show(); }
   });
   var v = $("#ver"); if (v) v.textContent = "سند الموظف الجامع v" + (window.SANAD_VERSION || "?");
+  document.addEventListener("sanad-reset", function () { put(""); });      /* «نسيت الرمز»: يمسح offline.js بيانات الجهاز ويطلب مسح الرمز */
   show();
 })();

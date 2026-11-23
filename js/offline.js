@@ -53,15 +53,24 @@
       ov.innerHTML = '<form class="modal card" role="dialog" aria-modal="true" aria-labelledby="pin-t"><h3 id="pin-t"></h3><p class="muted" id="pin-d"></p>' +
         '<div class="field"><label for="pin-1" id="pin-l"></label><input id="pin-1" type="password" inputmode="numeric" autocomplete="off" dir="ltr"><small></small></div>' +
         '<div class="field" id="pin-2w" hidden><label for="pin-2">أعد كتابة الرمز</label><input id="pin-2" type="password" inputmode="numeric" autocomplete="off" dir="ltr"><small></small></div>' +
-        '<div class="lerr" id="pin-e" hidden></div><div class="actions"><button type="button" class="btn sec" id="pin-c">إلغاء</button><button type="submit" class="btn">متابعة</button></div></form>';
+        '<div class="lerr" id="pin-e" hidden></div><div class="actions"><button type="button" class="btn sec" id="pin-c">إلغاء</button><button type="submit" class="btn">متابعة</button></div><button type="button" class="btn sec sm" id="pin-f" hidden>نسيت الرمز؟</button></form>';
       document.body.appendChild(ov);
       $("#pin-t", ov).textContent = opts.title;
       $("#pin-d", ov).textContent = opts.desc;
       $("#pin-l", ov).textContent = opts.label || "رمز حماية الجهاز";
       var lo = opts.min || 8, hi = opts.max || 12;
       if (opts.confirm) $("#pin-2w", ov).hidden = false;
-      var i1 = $("#pin-1", ov), i2 = $("#pin-2", ov), er = $("#pin-e", ov);
-      i1.focus();
+      var i1 = $("#pin-1", ov), i2 = $("#pin-2", ov), er = $("#pin-e", ov), sb = $("button[type=submit]", ov);
+      if (opts.lock) { ov.classList.add("lockov"); $("#pin-c", ov).hidden = true; }
+      if (opts.forgot) { var fb = $("#pin-f", ov); fb.hidden = false; fb.addEventListener("click", opts.forgot); }
+      if (opts.wait > 0) {        /* بعد محاولات خاطئة كثيرة: انتظار قبل المحاولة التالية */
+        var left = opts.wait; sb.disabled = true; i1.disabled = true; er.hidden = false;
+        var tm = setInterval(function () {
+          left -= 1; er.textContent = "محاولات خاطئة كثيرة. انتظر " + left + " ثانية";
+          if (left <= 0) { clearInterval(tm); sb.disabled = false; i1.disabled = false; er.hidden = true; i1.focus(); }
+        }, 1000);
+        er.textContent = "محاولات خاطئة كثيرة. انتظر " + left + " ثانية";
+      } else i1.focus();
       function done(v) { ov.remove(); resolve(v); }
       $("#pin-c", ov).addEventListener("click", function () { done(null); });
       $("form", ov).addEventListener("submit", function (e) {
@@ -74,11 +83,22 @@
     });
   }
   /* يضمن وجود المفتاح في الذاكرة: إنشاء رمز لأول مرة، أو إدخاله للفتح */
-  function ensureKey() {
+  function failState() { return idbGet(M, "fail").then(function (s) { return s || {}; }, function () { return {}; }); }
+  function failSave(s) { s.k = "fail"; return idbPut(M, s).catch(function () {}); }
+  /* «نسيت الرمز»: لا استرجاع. يُمسح ما على هذا الجهاز (الطلبات غير المُرحَّلة تضيع) ويُعاد الإعداد */
+  function wipeDevice() {
+    if (!window.confirm("نسيان الرمز لا حل له إلا مسح بيانات هذا الجهاز: تضيع الطلبات المحفوظة التي لم تُرحَّل، ويُعاد الإعداد من البداية. هل تريد المسح؟")) return;
+    if (!window.confirm("تأكيد أخير: مسح كل بيانات سند على هذا الجهاز نهائياً؟")) return;
+    document.dispatchEvent(new Event("sanad-reset"));          /* collector.js يمسح رمز الموظف */
+    var r = indexedDB.deleteDatabase(DB);
+    r.onsuccess = r.onerror = r.onblocked = function () { location.reload(); };
+  }
+  function ensureKey(mode) {
     if (KEY) return Promise.resolve(true);
+    var lock = !!(mode && mode.lock);
     return idbGet(M, "kdf").then(function (kdf) {
       if (!kdf) {
-        return askPin({ title: "حماية البيانات على هذا الجهاز", desc: "اختر رمزاً من 8 أرقام فأكثر. تُشفَّر به الطلبات المحفوظة دون اتصال. لا يمكن استرجاعه إن نُسي، ولا يُرسل إلى أي مكان.", confirm: true }).then(function (pin) {
+        return askPin({ title: lock ? "قفل التطبيق وحماية البيانات" : "حماية البيانات على هذا الجهاز", desc: lock ? "اختر رمزاً من 8 أرقام فأكثر. يُطلب لفتح التطبيق ولحماية الطلبات المحفوظة (تُشفَّر به). لا يمكن استرجاعه إن نُسي، ولا يُرسل إلى أي مكان." : "اختر رمزاً من 8 أرقام فأكثر. تُشفَّر به الطلبات المحفوظة دون اتصال. لا يمكن استرجاعه إن نُسي، ولا يُرسل إلى أي مكان.", confirm: true, lock: lock }).then(function (pin) {
           if (!pin) return false;
           var salt = crypto.getRandomValues(new Uint8Array(16));
           return derive(pin, salt).then(function (k) { KEY = k; return encBuf(enc.encode("sanad-ok")); })
@@ -86,11 +106,22 @@
         });
       }
       function attempt(n) {
-        return askPin({ title: "فتح الطلبات المحفوظة", desc: n ? "الرمز غير صحيح. حاول مرة أخرى." : "أدخل رمز حماية الجهاز." }).then(function (pin) {
-          if (!pin) return false;
-          return derive(pin, kdf.salt).then(function (k) {
-            KEY = k;
-            return decBuf(kdf.check).then(function () { return true; }, function () { KEY = null; return n >= 4 ? false : attempt(n + 1); });
+        return failState().then(function (fs) {
+          var wait = Math.max(0, Math.ceil(((fs.until || 0) - Date.now()) / 1000));
+          return askPin({ title: lock ? "سند مقفل" : "فتح الطلبات المحفوظة", desc: n ? "الرمز غير صحيح. حاول مرة أخرى." : lock ? "أدخل رمز حماية الجهاز لفتح التطبيق." : "أدخل رمز حماية الجهاز.",
+                          lock: lock, wait: wait, forgot: lock ? wipeDevice : null }).then(function (pin) {
+            if (!pin) return false;
+            return derive(pin, kdf.salt).then(function (k) {
+              KEY = k;
+              return decBuf(kdf.check).then(function () { return failSave({}).then(function () { return true; }); }, function () {
+                KEY = null;
+                return failState().then(function (s) {
+                  s.n = (s.n || 0) + 1;
+                  if (s.n >= 5) s.until = Date.now() + Math.min(300, 30 * Math.pow(2, s.n - 5)) * 1000;      /* 30ث ثم 60 ثم 120... حتى 5 دقائق */
+                  return failSave(s);
+                }).then(function () { return (!lock && n >= 4) ? false : attempt(n + 1); });
+              });
+            });
           });
         });
       }
@@ -431,6 +462,34 @@
   }, true);
   if (!COLLECTOR) window.addEventListener("offline", render);
   if (!COLLECTOR) window.addEventListener("online", function () { render().then(function () { if (KEY) syncAll(); else idbAll(Q).then(function (i) { if (i.length) toast("عاد الاتصال: اضغط «مزامنة الآن» لإرسال الطلبات المحفوظة"); }); }); });
+
+  /* ---------- قفل التطبيق (الموظف الجامع): رمز الحماية عند كل فتح، وقفل تلقائي عند الخمول أو العودة من الخلفية ---------- */
+  var IDLE_MS = 2 * 60 * 1000, BG_MS = 60 * 1000, lockBusy = false, idleT = null, hiddenAt = 0, de = document.documentElement;
+  function modalOpen() { return !!document.querySelector(".modal-ov"); }
+  function unlockFlow() {
+    if (!COLLECTOR || lockBusy) return;
+    lockBusy = true; de.classList.add("locked");
+    ensureKey({ lock: true }).then(function (ok) {
+      lockBusy = false;
+      if (ok) { de.classList.remove("locked"); armIdle(); } else unlockFlow();
+    });
+  }
+  function lockNow() {
+    if (!COLLECTOR || lockBusy || !$("#app") || $("#app").hidden) return;
+    if (modalOpen()) { setTimeout(lockNow, 15000); return; }       /* لا نقاطع عملية جارية (حفظ/ترحيل) */
+    KEY = null; unlockFlow();
+  }
+  function armIdle() { clearTimeout(idleT); if (COLLECTOR) idleT = setTimeout(lockNow, IDLE_MS); }
+  if (COLLECTOR) {
+    ["pointerdown", "keydown", "touchstart", "scroll"].forEach(function (ev) { document.addEventListener(ev, function () { if (!lockBusy && KEY) armIdle(); }, { passive: true }); });
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) hiddenAt = Date.now();
+      else if (hiddenAt && Date.now() - hiddenAt > BG_MS) lockNow();
+    });
+    document.addEventListener("sanad-lock", unlockFlow);
+    document.addEventListener("click", function (e) { if (e.target && e.target.id === "lock-now") lockNow(); });
+    if (de.classList.contains("locked")) unlockFlow();
+  }
 
   bindForm();
   render();
