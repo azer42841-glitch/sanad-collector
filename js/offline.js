@@ -164,6 +164,26 @@
     });
   }
 
+  /* ---------- سرّ الجهاز المفعَّل: يُحفظ مشفَّراً برمز الحماية، ويوقّع كل طلب يجمعه الجهاز ---------- */
+  function hmacHex(secret, msg) {
+    return crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]).then(function (k) {
+      return crypto.subtle.sign("HMAC", k, enc.encode(msg));
+    }).then(function (sig) { return Array.prototype.map.call(new Uint8Array(sig), function (b) { return ("0" + b.toString(16)).slice(-2); }).join(""); });
+  }
+  function adoptDevice() {
+    var take = window.SANAD_TAKE_PENDING_DEVICE, p = take && take();
+    if (!p || !KEY) return Promise.resolve();
+    return encBuf(enc.encode(p.s)).then(function (o) { return idbPut(M, { k: "device", d: p.d, iv: o.iv, ct: o.ct }); });
+  }
+  function signFields(fields) {
+    return idbGet(M, "device").then(function (dv) {
+      if (!dv || !KEY) return;
+      return decBuf({ iv: dv.iv, ct: dv.ct }).then(function (buf) {
+        return hmacHex(dec.decode(buf), fields.client_uid + "|" + fields.collected_by + "|" + dv.d).then(function (h) { fields.device_id = String(dv.d); fields.device_mac = h; });
+      });
+    });
+  }
+
   /* ---------- الحفظ في الطابور المشفَّر ---------- */
   function me() { var m = document.querySelector('meta[name="sanad-user"]'); return m ? m.content : ""; }
   function saveEntry(form, fields) {
@@ -176,7 +196,7 @@
           .then(function (e) { files.push({ name: inp.name, iv: e.iv, ct: e.ct, type: "image/jpeg" }); });
       });
     });
-    return chain.then(function () { return encBuf(enc.encode(JSON.stringify(fields))); }).then(function (meta) {
+    return chain.then(function () { return COLLECTOR ? signFields(fields) : null; }).then(function () { return encBuf(enc.encode(JSON.stringify(fields))); }).then(function (meta) {
       var id = fields.client_uid;
       return idbPut(Q, { id: id, created: new Date().toISOString(), status: "pending", error: "", meta: meta, files: files });
     });
@@ -489,7 +509,7 @@
     lockBusy = true; de.classList.add("locked");
     ensureKey({ lock: true }).then(function (ok) {
       lockBusy = false;
-      if (ok) { de.classList.remove("locked"); armIdle(); purgeAndRender(); } else unlockFlow();
+      if (ok) { de.classList.remove("locked"); armIdle(); adoptDevice().then(purgeAndRender); } else unlockFlow();
     });
   }
   function lockNow() {

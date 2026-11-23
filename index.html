@@ -21,17 +21,22 @@
 </svg>
 <main class="collector">
   <section id="setup" class="card stack" hidden>
-    <h1>إعداد الموظف الجامع</h1>
-    <p class="muted">هذا الوضع يعمل بلا إنترنت وبلا خادم. تُحفظ الطلبات مشفَّرة على هذا الهاتف، ثم تُرحَّل إلى الحاسوب المركزي في الجمعية. أدخل رمزك الذي أعطاك إياه المدير.</p>
-    <div class="field" id="setup-f"><label for="emp">رمز الموظف</label><input id="emp" dir="ltr" inputmode="text" autocomplete="off" placeholder="EMP-002" maxlength="12"><small></small></div>
-    <div class="actions"><button type="button" class="btn" id="setup-save">حفظ والبدء</button></div>
+    <h1>تفعيل الموظف الجامع</h1>
+    <p class="muted">لا يعمل هذا التطبيق قبل تفعيله من حاسوب الجمعية. يعطيك المدير <b>كود تفعيل من 6 أرقام</b> وعنوان الحاسوب. بعد التفعيل تُحفظ الطلبات مشفَّرة على هذا الهاتف ثم تُرحَّل إلى الحاسوب المركزي.</p>
+    <ol class="muted"><li>تأكد أن هاتفك متصل بشبكة الجمعية (أو برابط يعطيك إياه المدير).</li><li>اكتب عنوان حاسوب الجمعية واضغط «فتح صفحة التفعيل».</li><li>أدخل كود التفعيل هناك، ثم اضغط «العودة إلى التطبيق».</li></ol>
+    <div class="field" id="srv-f"><label for="srv">عنوان حاسوب الجمعية</label><input id="srv" dir="ltr" inputmode="url" autocomplete="off" autocapitalize="none" placeholder="192.168.1.20:5000" maxlength="80"><small></small></div>
+    <div class="actions"><button type="button" class="btn" id="act-open">فتح صفحة التفعيل</button></div>
+    <details><summary class="muted">لم تعد الصفحة إلى التطبيق؟ الصق مفتاح التفعيل هنا</summary>
+      <div class="field" id="tok-f"><label for="act-token">مفتاح التفعيل</label><input id="act-token" dir="ltr" autocomplete="off" autocapitalize="none"><small></small></div>
+      <div class="actions"><button type="button" class="btn sec" id="act-paste">تفعيل بالمفتاح</button></div></details>
   </section>
 
   <div id="app" hidden>
   <div class="top"><div class="grow"><h1>طلب جديد</h1>
     <p>يعمل دون اتصال: يُحفظ الطلب مشفَّراً على هذا الهاتف ثم يُرحَّل إلى الحاسوب المركزي</p></div></div>
   <div id="ob-tools" class="ob-tools"></div>
-  <div class="opbar"><span>الموظف الجامع:</span><b class="code" id="who"></b><button type="button" class="btn sec sm" id="change-emp">تغيير الرمز</button><button type="button" class="btn sec sm" id="lock-now">قفل</button><a class="btn sec sm" href="lookup.html">بحث في الكفالات</a></div>
+  <div class="opbar"><span>الموظف الجامع:</span><b class="code" id="who"></b><button type="button" class="btn sec sm" id="change-emp">إعادة التفعيل</button><button type="button" class="btn sec sm" id="lock-now">قفل</button><a class="btn sec sm" href="lookup.html">بحث في الكفالات</a></div>
+  <div id="viewer-note" class="flash" hidden><b>هذا الجهاز مفعّل للبحث فقط.</b> لا يُسجَّل عليه إدخال. استخدم «بحث في الكفالات» أعلاه.</div>
   <form id="rform" novalidate class="stack" data-offline="request" autocomplete="off">
     <input type="hidden" name="client_uid" id="client_uid" value="">
     <section class="card"><h2>بيانات اليتيم</h2><div class="fgrid">
