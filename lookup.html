@@ -21,15 +21,16 @@
 
   <section id="s-empty" class="card stack" hidden>
     <h2>لا توجد بيانات على هذا الجوال</h2>
-    <p class="muted">في سند على الحاسوب: «نسخة البحث للجوال» ← تصدير. ثم أرسل الملف لهذا الجوال (واتساب ويب أو بريد أو AirDrop) واخترْه هنا.</p>
+    <p class="muted">يرسل لك المدير <b>ملف بيانات خاصاً بجهازك</b> (واتساب أو بريد أو AirDrop): يُنزَّل من «أجهزة الموظفين» في سند على الحاسوب. اختر الملف هنا، ثم افتحه <b>برمز حماية الجهاز</b>. (وملف المدير الشخصي يُفتح بكلمة مرور ملفه.)</p>
     <label class="btn" for="pick">اختيار الملف (.sanadlk)</label><input id="pick" type="file" hidden>
   </section>
 
   <section id="s-lock" class="card stack" hidden>
     <h2>البيانات محفوظة ومقفلة</h2>
     <p class="muted" id="info"></p>
-    <div class="field"><label for="pw">كلمة مرور الملف</label><input id="pw" type="password" autocomplete="off" autocapitalize="off" dir="ltr"><small id="pw-h"></small></div>
-    <div class="actions"><button type="button" class="btn" id="unlock">فتح</button>
+    <div class="field"><label for="pw">كلمة مرور الملف</label><input id="pw" type="password" autocomplete="off" autocapitalize="off" dir="ltr"><small id="pw-h">ملف خاص بجهازك؟ اكتب هنا <b>رمز حماية الجهاز</b> (نفس رمز التطبيق) واضغط «فتح برمز حماية الجهاز».</small></div>
+    <div class="actions"><button type="button" class="btn" id="unlock">فتح بكلمة مرور الملف</button>
+      <button type="button" class="btn" id="unlock-dev" hidden>فتح برمز حماية الجهاز</button>
       <label class="btn sec" for="pick2">استبدال بملف أحدث</label><input id="pick2" type="file" hidden>
       <button type="button" class="btn sec" id="wipe">حذف البيانات من الجوال</button></div>
   </section>

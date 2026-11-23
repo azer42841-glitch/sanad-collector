@@ -95,6 +95,41 @@
     };
     rd.readAsText(f);
   }
+  /* جهاز مفعَّل: سرّ الجهاز محفوظ مشفَّراً برمز الحماية في قاعدة التطبيق؛ ملف بيانات الجهاز مشفَّر بهذا السرّ فلا كلمة مرور للملف */
+  function idb() {
+    return new Promise(function (res, rej) {
+      var r = indexedDB.open("sanad-offline", 1);
+      r.onupgradeneeded = function () { try { r.transaction.abort(); } catch (e) {} };
+      r.onsuccess = function () { res(r.result); }; r.onerror = function () { rej(r.error); };
+    });
+  }
+  function meta(db, k) {
+    return new Promise(function (res, rej) {
+      var q = db.transaction("meta", "readonly").objectStore("meta").get(k); q.onsuccess = function () { res(q.result); }; q.onerror = function () { rej(q.error); };
+    });
+  }
+  async function deviceSecret(pin) {
+    var db = await idb(), kdf = await meta(db, "kdf"), dev = await meta(db, "device"); db.close();
+    if (!kdf || !dev) throw new Error("nodevice");
+    var c = root.crypto || globalThis.crypto, base = await c.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveKey"]);
+    var key = await c.subtle.deriveKey({ name: "PBKDF2", salt: kdf.salt, iterations: 250000, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    await c.subtle.decrypt({ name: "AES-GCM", iv: kdf.check.iv }, key, kdf.check.ct);                 /* يتحقق من الرمز */
+    return new TextDecoder().decode(await c.subtle.decrypt({ name: "AES-GCM", iv: dev.iv }, key, dev.ct));
+  }
+  async function hasDevice() { try { var db = await idb(), d = await meta(db, "device"); db.close(); return !!d; } catch (e) { return false; } }
+  async function unlockDevice() {
+    if (Date.now() < blockedUntil) return note("محاولات كثيرة. انتظر نصف دقيقة.", "error");
+    var pin = $("#pw").value; if (!pin) return;
+    $("#unlock-dev").disabled = true; note("جارٍ الفتح…");
+    try {
+      var secret = await deviceSecret(pin);
+      rows = await open(store(), secret); fails = 0; $("#pw").value = ""; note(""); view("search"); draw(); idle(); $("#q").focus();
+    } catch (e) {
+      rows = null; if (!(e && e.code === "expired")) fails++; if (fails >= 5) { blockedUntil = Date.now() + 30000; fails = 0; }
+      note(e && e.code === "expired" ? "انتهت صلاحية هذه النسخة. اطلب ملفاً جديداً من المدير." : e && e.message === "nodevice" ? "هذا الجوال غير مفعَّل. استعمل كلمة مرور الملف." : "رمز حماية الجهاز خاطئ أو الملف ليس لهذا الجهاز.", "error");
+    }
+    $("#unlock-dev").disabled = false;
+  }
   async function unlock() {
     if (Date.now() < blockedUntil) return note("محاولات كثيرة. انتظر نصف دقيقة.", "error");
     var pw = $("#pw").value; if (!pw) return;
@@ -109,6 +144,8 @@
   }
   $("#pick").addEventListener("change", pick); $("#pick2").addEventListener("change", pick);
   $("#unlock").addEventListener("click", unlock);
+  $("#unlock-dev").addEventListener("click", unlockDevice);
+  hasDevice().then(function (ok) { $("#unlock-dev").hidden = !ok; });
   $("#pw").addEventListener("keydown", function (e) { if (e.key === "Enter") unlock(); });
   $("#q").addEventListener("input", function () { draw(); idle(); });
   $("#lock").addEventListener("click", function () { lock("قُفل البحث."); });
