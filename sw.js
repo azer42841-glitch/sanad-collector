@@ -1,5 +1,5 @@
 // يُولَّد تلقائياً بواسطة tools/build_collector.py، لا تعدّله يدوياً.
-const CACHE = 'sanad-collector-1.11.0-429a7339';
+const CACHE = 'sanad-collector-1.12.0-b079765c';
 const FILES = [
   './',
   'css/app.css',

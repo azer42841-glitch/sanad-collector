@@ -53,11 +53,16 @@
     rows = null; clearTimeout(timer); $("#results").textContent = ""; $("#q").value = ""; $("#pw").value = "";
     refresh(); if (why) note(why);
   }
+  function daysLeft(d) { return d.exp ? Math.ceil((new Date(d.exp + "T23:59:59") - new Date()) / 86400000) : null; }
   function refresh() {
     var t = store();
     if (!t) return view("empty");
+    try {                           // انتهت الصلاحية: تُحذف النسخة من الجوال تلقائياً
+      var dd = peek(t);
+      if (expired(dd)) { try { localStorage.removeItem(KEY); } catch (_) {} rows = null; view("empty"); return note("انتهت صلاحية النسخة (" + dd.exp + ") وحُذفت بياناتها من هذا الجوال. اطلب نسخة جديدة من المدير.", "error"); }
+    } catch (e) {}
     try { var d = peek(t); $("#info").textContent = (d.label ? "لـ: " + d.label + " · " : "") + "تاريخ النسخة: " + d.made + " · عدد الملفات: " + d.n + (d.exp ? " · صالحة حتى " + d.exp : "");
-      if (expired(d)) note("انتهت صلاحية هذه النسخة (" + d.exp + "). اطلب نسخة جديدة من المدير أو احذف البيانات.", "error"); $("#stamp").textContent = "نسخة بتاريخ " + d.made + ". ما تغيّر بعدها لا يظهر هنا."; view("lock"); }
+      var left = daysLeft(d); if (left !== null && left <= 14) note("تنتهي صلاحية هذه النسخة بعد " + left + " يوماً وتُحذف من الجوال. اطلب من المدير تجديدها.", "error"); $("#stamp").textContent = "نسخة بتاريخ " + d.made + ". ما تغيّر بعدها لا يظهر هنا."; view("lock"); }
     catch (e) { try { localStorage.removeItem(KEY); } catch (_) {} view("empty"); }
   }
   function idle() { clearTimeout(timer); timer = setTimeout(function () { lock("قُفل البحث بعد دقيقتين من الخمول."); }, 120000); }
@@ -110,7 +115,7 @@
   $("#wipe").addEventListener("click", function () {
     if (confirm("حذف البيانات من هذا الجوال؟ يمكنك استيراد ملف آخر لاحقاً.")) { try { localStorage.removeItem(KEY); } catch (e) {} lock("حُذفت البيانات من الجوال."); }
   });
-  document.addEventListener("visibilitychange", function () { if (document.hidden && rows) lock("قُفل البحث لأنك غادرت الصفحة."); });
+  document.addEventListener("visibilitychange", function () { if (document.hidden && rows) lock("قُفل البحث لأنك غادرت الصفحة."); else if (!document.hidden && !rows) refresh(); });
   ["click", "touchstart", "keydown"].forEach(function (ev) { document.addEventListener(ev, function () { if (rows) idle(); }, { passive: true }); });
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js", { scope: "./" }).catch(function () {});
   refresh();
